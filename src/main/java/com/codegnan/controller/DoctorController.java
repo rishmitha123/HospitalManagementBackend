@@ -2,6 +2,7 @@ package com.codegnan.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -14,74 +15,89 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.codegnan.entity.Doctor;
-import com.codegnan.entity.Patient;
+import com.codegnan.entity.Doctors;
+import com.codegnan.entity.Patients;
 import com.codegnan.exception.InvalidDoctorIDException;
 import com.codegnan.service.DoctorService;
 import com.codegnan.service.PatientService;
 
 @RestController
-@RequestMapping("/doctors")
-@CrossOrigin(origins = "http://localhost:3000")
+@RequestMapping("/doctor")
+@CrossOrigin(origins = "*")
 public class DoctorController {
 	DoctorService doctorService;
 	PatientService patientService;
+
+	@Autowired
+	public void setPatientService(PatientService patientService) {
+		this.patientService = patientService;
+	}
+
+	@Autowired
+	public void setDoctorService(DoctorService doctorService) {
+		this.doctorService = doctorService;
+	}
+
 	public DoctorController(DoctorService doctorService, PatientService patientService) {
 		super();
 		this.doctorService = doctorService;
 		this.patientService = patientService;
 	}
+
+	public DoctorController() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	// Retrieve a specific doctor
 	@GetMapping("/{id}")
-	public ResponseEntity<Doctor> getDoctor(@PathVariable int id) throws InvalidDoctorIDException {
-		Doctor doctor = doctorService.findDoctorById(id);
-		ResponseEntity<Doctor> responseEntity = new ResponseEntity<>(doctor, HttpStatus.FOUND);
+	public ResponseEntity<Doctors> getDoctorById(@PathVariable int id) throws InvalidDoctorIDException {
+		Doctors doctor = doctorService.findDoctorById(id);
+		ResponseEntity<Doctors> responseEntity = new ResponseEntity<>(doctor, HttpStatus.FOUND);
 		return responseEntity;
 	}
-	
+
+	// Retrieve all Dcotors
 	@GetMapping
-	public ResponseEntity<List<Doctor>> getAllDoctors() throws InvalidDoctorIDException {
-		List<Doctor> doctors = doctorService.findAllDoctors();
-		ResponseEntity<List<Doctor>> responseEntity = new ResponseEntity<List<Doctor>>(doctors, HttpStatus.OK);
+	public ResponseEntity<List<Doctors>> getAllDoctors() {
+		List<Doctors> doctors = doctorService.findAllDoctors();
+		ResponseEntity<List<Doctors>> responseEntity = new ResponseEntity<>(doctors, HttpStatus.OK);
 		return responseEntity;
 	}
-	
-	@GetMapping("/{id}/doctors")
-	public ResponseEntity<List<Patient>> getPatientByDoctor(@PathVariable int id) throws InvalidDoctorIDException {
-		Doctor doctor = doctorService.findDoctorById(id);
-		List<Patient> patients = patientService.findPatientByDoctor(doctor);
-		ResponseEntity<List<Patient>> responseEntity = new ResponseEntity<>(patients, HttpStatus.FOUND);
+
+	// Add a new Doctor
+	@PostMapping
+	public ResponseEntity<Doctors> saveDoctor(@RequestBody Doctors doctor) {
+		Doctors savedDoctor = doctorService.saveDoctor(doctor);
+		ResponseEntity<Doctors> responseEntity = new ResponseEntity<Doctors>(savedDoctor, HttpStatus.ACCEPTED);
 		return responseEntity;
 	}
-	
-	@PostMapping 
-	public ResponseEntity<Doctor> saveDoctor(@RequestBody Doctor doctor) {
-		Doctor doctorSaved = doctorService.saveDoctor(doctor); 
-		ResponseEntity<Doctor> responseEntity = new ResponseEntity<Doctor>(doctorSaved, HttpStatus.ACCEPTED);
-		return responseEntity;
-	}
-	
+
+	// Edit a specific Doctor details
 	@PutMapping("/{id}")
-	public ResponseEntity<Doctor> editBranch(@PathVariable("id") int id, @RequestBody Doctor doctor) throws InvalidDoctorIDException {
-		if(id != doctor.getId()) {
-			throw new InvalidDoctorIDException("Doctor ID is not valid "+id);
+	public ResponseEntity<Doctors> editDoctor(@PathVariable("id") int id, @RequestBody Doctors doctor)
+			throws InvalidDoctorIDException {
+		if (id != doctor.getId()) {
+			throw new InvalidDoctorIDException("No doctor exists with the id : " + id);
 		}
-		Doctor doctorEdited = doctorService.editDoctor(doctor) ;
-		ResponseEntity<Doctor> responseEntity = new ResponseEntity<Doctor>(doctorEdited, HttpStatus.ACCEPTED);
+		Doctors editedDoctor = doctorService.editDoctor(doctor);
+		ResponseEntity<Doctors> responseEntity = new ResponseEntity<>(editedDoctor, HttpStatus.ACCEPTED);
 		return responseEntity;
 	}
-	
+
+	// Delete a specific doctor
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Doctor> deleteBranch(@PathVariable("id") int id) throws InvalidDoctorIDException {
-		Doctor doctor = doctorService.deleteDoctor(id) ;
-		ResponseEntity<Doctor> responseEntity = new ResponseEntity<Doctor>(doctor, HttpStatus.ACCEPTED);
+	public ResponseEntity<Doctors> deleteDoctor(@PathVariable int id) throws InvalidDoctorIDException {
+		Doctors doctor = doctorService.deleteDoctor(id);
+		ResponseEntity<Doctors> responseEntity = new ResponseEntity<>(doctor, HttpStatus.ACCEPTED);
 		return responseEntity;
 	}
-	
+
+	// Retrieve all patients associated with a specific doctor
+	@GetMapping("/{id}/patients")
+	public ResponseEntity<List<Patients>> getPatientsByDoctor(@PathVariable int id) throws InvalidDoctorIDException {
+		Doctors doctor = doctorService.findDoctorById(id);
+		List<Patients> patients = patientService.findAllPatientsByDoctor(doctor);
+		return new ResponseEntity<>(patients, HttpStatus.OK);
+	}
 }
-
-	
-
-	
-	
-
-
